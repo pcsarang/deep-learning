@@ -2,30 +2,52 @@ import tensorflow as tf
 import matplotlib.pyplot as plt
 import random
 
-tf.set_random_seed(777)
 
 from tensorflow.examples.tutorials.mnist import input_data
+
+tf.set_random_seed(777)
 
 mnist = input_data.read_data_sets("MNIST_data/", one_hot=True)
 
 # hyper parameters
 num_epochs = 15
 batch_size = 100
-learning_rate = 0.1
+learning_rate = 0.001
 
 num_classes = 10
 
-# MNIST data image of shape 28 * 28 = 784
+
+# input place holders
 X = tf.placeholder(tf.float32, [None, 784])
-# 0 - 9 digits recognition = 10 classes
-Y = tf.placeholder(tf.float32, [None, num_classes])
+Y = tf.placeholder(tf.float32, [None, 10])
 
-W = tf.Variable(tf.random_normal([784, num_classes]))
-b = tf.Variable(tf.random_normal([num_classes]))
+with tf.variable_scope('layer1') as scope:
+    W1 = tf.Variable(tf.random_normal([784, 512]))
+    b1 = tf.Variable(tf.random_normal([512]))
+    L1 = tf.nn.relu(tf.matmul(X, W1) + b1)
 
-hypothesis = tf.nn.softmax(tf.matmul(X, W) + b)
-cost = tf.reduce_mean(-tf.reduce_sum(Y * tf.log(hypothesis), axis=1))
-optimizer = tf.train.GradientDescentOptimizer(learning_rate=learning_rate).minimize(cost)
+with tf.variable_scope('layer2') as scope:
+    W2 = tf.Variable(tf.random_normal([512, 512]))
+    b2 = tf.Variable(tf.random_normal([512]))
+    L2 = tf.nn.relu(tf.matmul(L1, W2) + b2)
+
+with tf.variable_scope('layer3') as scope:
+    W3 = tf.Variable(tf.random_normal([512, 512]))
+    b3 = tf.Variable(tf.random_normal([512]))
+    L3 = tf.nn.relu(tf.matmul(L2, W3) + b3)
+
+with tf.variable_scope('layer4') as scope:
+    W4 = tf.Variable(tf.random_normal([512, 512]))
+    b4 = tf.Variable(tf.random_normal([512]))
+    L4 = tf.nn.relu(tf.matmul(L3, W4) + b4)
+
+with tf.variable_scope('layer5') as scope:
+    W5 = tf.Variable(tf.random_normal([512, num_classes]))
+    b5 = tf.Variable(tf.random_normal([num_classes]))
+
+hypothesis = tf.matmul(L4, W5) + b5
+cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits_v2(logits=hypothesis, labels=Y))
+optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
 
 # Test model
 is_correct = tf.equal(tf.argmax(hypothesis, 1), tf.argmax(Y, 1))
@@ -66,10 +88,5 @@ with tf.Session() as sess:
         sess.run(tf.argmax(hypothesis, 1), feed_dict={X: mnist.test.images[r : r + 1]}),
     )
 
-    plt.imshow(
-        mnist.test.images[r : r + 1].reshape(28, 28),
-        cmap="Greys",
-        interpolation="nearest",
-    )
-    plt.show()
+    # Accuracy:  0.9496
 

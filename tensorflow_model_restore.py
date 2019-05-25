@@ -58,11 +58,3 @@ with tf.Session() as sess:
         print(var.name, val)
 
 
-
-    plt.imshow(
-        mnist.test.images[r : r + 1].reshape(28, 28),
-        cmap="Greys",
-        interpolation="nearest",
-    )
-    plt.show()
-
